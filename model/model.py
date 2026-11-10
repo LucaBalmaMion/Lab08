@@ -1,4 +1,5 @@
 from database.distributore_DAO import DistributoreDAO
+from database.prezzo_DAO import PrezzoDAO
 
 '''
     MODELLO:
@@ -26,6 +27,18 @@ class Model:
         :return: lista di tuple --> (nome del distributore, media), es. (Distributore A, 1.789)
         """
         # TODO
+        result = []
+        for distributore in self._distributori:
+            lista_prezzi_mese = []
+            prezzi_distributore = PrezzoDAO.get_prezzi(distributore.id)
+            for prezzo in prezzi_distributore:
+                if prezzo.data.month == mese:
+                    lista_prezzi_mese.append(prezzo.prezzo_litro)
+            media = sum(lista_prezzi_mese) / len(lista_prezzi_mese)
+            result.append((distributore.nome, media))
+        return result
+
+
 
     def get_sequenza_ottima(self, mese:int):
         """
