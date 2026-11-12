@@ -1,5 +1,7 @@
+from database import distributore_DAO
 from database.distributore_DAO import DistributoreDAO
 from database.prezzo_DAO import PrezzoDAO
+
 
 '''
     MODELLO:
@@ -30,7 +32,7 @@ class Model:
         result = []
         for distributore in self._distributori:
             lista_prezzi_mese = []
-            prezzi_distributore = PrezzoDAO.get_prezzi(distributore.id)
+            prezzi_distributore = distributore.get_prezzi()
             for prezzo in prezzi_distributore:
                 if prezzo.data.month == mese:
                     lista_prezzi_mese.append(prezzo.prezzo_litro)
@@ -60,6 +62,18 @@ class Model:
     def __ricorsione(self, sequenza_parziale, giorno, ultimo_distributore, costo_corrente, prezzi_settimana):
         """ Implementa la ricorsione """
         # TODO
+        if giorno > 7:
+            if self.__costo_ottimo == -1 or costo_corrente < self.__costo_ottimo:
+                self.__costo_ottimo = costo_corrente
+                self.__sequenza_ottima = list(sequenza_parziale)
+            return
+        for id_distributore in prezzi_settimana:
+            costo_corrente_nuovo = costo_corrente + prezzi_settimana[id_distributore][giorno - 1] * 100
+            if id_distributore != ultimo_distributore and ultimo_distributore is not None:
+               costo_corrente_nuovo += 5
+            sequenza_parziale.append(id_distributore)
+            self.__ricorsione(sequenza_parziale, giorno + 1, id_distributore, costo_corrente_nuovo, prezzi_settimana)
+            sequenza_parziale.pop()
 
     def __get_prezzi_prima_settimana_mese(self, mese: int):
         """
@@ -67,3 +81,13 @@ class Model:
         :return: un dizionario: {id_distributore: [prezzo_giorno1, ..., prezzo_giorno7]}
         """
         # TODO
+        diz_distributori_prezzi = {}
+        for distributore in self._distributori:
+            lista_prezzi = distributore.get_prezzi()
+            lista_prezzi_primi_mese = [0]*7
+            for prezzo in lista_prezzi:
+                if prezzo.data.month == mese and prezzo.data.day <= 7:
+                    lista_prezzi_primi_mese[prezzo.data.day-1] = prezzo.prezzo_litro
+            diz_distributori_prezzi[distributore.id] = lista_prezzi_primi_mese
+        return diz_distributori_prezzi
+
